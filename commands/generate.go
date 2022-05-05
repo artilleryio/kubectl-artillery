@@ -41,7 +41,7 @@ func newCmdGenerate(
 	cmd := &cobra.Command{
 		Use:     "generate [OPTIONS]",
 		Aliases: []string{"gen"},
-		Short:   "Generates load test manifests configured in a kustomization.yaml file",
+		Short:   "Generates load test Job manifests configured in a kustomization.yaml file",
 		Example: fmt.Sprintf(loadtestExample, cliName),
 		//RunE:    makeRunLoadTest(workingDir, io),
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -34,7 +34,7 @@ func NewCmdArtillery(
 ) *cobra.Command {
 
 	cmd := &cobra.Command{
-		Short:        "Use artillery.io operator helpers",
+		Short:        "Bootstrap functional testing on Kubernetes with Artillery",
 		Use:          "artillery",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
