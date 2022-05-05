@@ -20,10 +20,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const LoadTestFilename = "loadtest-cr.yaml"
-const LabelPrefix = "loadtest"
+// WorkerImage the Artillery image used by workers to run tests.
+const WorkerImage = "artilleryio/artillery:latest"
+
+// JobTestScriptVol the volume used by created Pods to load the test script ConfigMap.
+const JobTestScriptVol = "test-script"
+
+const TestFilename = "test-job.yaml"
+const LabelPrefix = "artilleryio-test"
 const DefaultManifestDir = "artillery-manifests"
 const DefaultScriptsDir = "artillery-scripts"
+
 const cliSettingsFilename = ".artillerykuberc"
 
 // CLISettings defines global settings used by the kubectl-artillery CLI.

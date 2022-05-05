@@ -21,7 +21,7 @@ import (
 // Generatable defines where and how (using the Marshaler) to generate a file.
 type Generatable struct {
 	Path      string
-	Marshaler FileMarshaler
+	Marshaler fileMarshaler
 }
 
 // Generatables a convenience type that defines a list of Generatable types.

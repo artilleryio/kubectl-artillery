@@ -22,13 +22,13 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-// Kustomization wrapper to enable marshaling a Kustomization to a file
+// Kustomization wrapper to enable marshaling a Kustomization to a file.
 type Kustomization struct {
 	*types.Kustomization
 }
 
-// NewKustomization returns a configured Kustomization wrapper for a LoadTest
-func NewKustomization(loadtest, configMap, testScript, labelPrefix string) *Kustomization {
+// NewKustomization returns a configured Kustomization wrapper for an Artillery test.
+func NewKustomization(testFilename, configMap, testScript, labelPrefix string) *Kustomization {
 	testScript = filepath.Base(testScript)
 
 	k := &Kustomization{
@@ -50,11 +50,11 @@ func NewKustomization(loadtest, configMap, testScript, labelPrefix string) *Kust
 			GeneratorOptions: &types.GeneratorOptions{
 				DisableNameSuffixHash: true,
 				Labels: map[string]string{
-					"artillery.io/component": fmt.Sprintf("%s-config", labelPrefix),
+					"artillery.io/component": fmt.Sprintf("%s-config", LabelPrefix),
 					"artillery.io/part-of":   labelPrefix,
 				},
 			},
-			Resources: []string{loadtest},
+			Resources: []string{testFilename},
 		},
 	}
 
