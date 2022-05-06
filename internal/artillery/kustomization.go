@@ -28,11 +28,12 @@ type Kustomization struct {
 }
 
 // NewKustomization returns a configured Kustomization wrapper for an Artillery test.
-func NewKustomization(testFilename, configMap, testScript, labelPrefix string) *Kustomization {
+func NewKustomization(testFilename, namespace, configMap, testScript, labelPrefix string) *Kustomization {
 	testScript = filepath.Base(testScript)
 
 	k := &Kustomization{
 		Kustomization: &types.Kustomization{
+			Namespace: namespace,
 			TypeMeta: types.TypeMeta{
 				Kind:       types.KustomizationKind,
 				APIVersion: types.KustomizationVersion,

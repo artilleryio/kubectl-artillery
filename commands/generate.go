@@ -28,7 +28,7 @@ import (
 
 const generatetestExample = `- $ %[1]s generate <test-name> --script path/to/test-script
 - $ %[1]s generate <test-name> -s path/to/test-script
-- $ %[1]s generate <test-name> -s path/to/test-script [--out ] [--count ]`
+- $ %[1]s generate <test-name> -s path/to/test-script [--namespace] [--out ] [--count ]`
 
 // newCmdGenerate creates the "generate" test command
 func newCmdGenerate(
@@ -66,12 +66,12 @@ func newCmdGenerate(
 		"Specify path to artillery test-script file",
 	)
 
-	//flags.StringP(
-	//	"env",
-	//	"e",
-	//	"dev",
-	//	"Optional. Specify the test environment - defaults to dev",
-	//)
+	flags.StringP(
+		"namespace",
+		"n",
+		"default",
+		"Optional. Specify a namespace for your services",
+	)
 
 	flags.StringP(
 		"out",
@@ -110,10 +110,10 @@ func makeRunGenTest(workingDir string, io genericclioptions.IOStreams) func(cmd 
 			return err
 		}
 
-		//env, err := cmd.Flags().GetString("env")
-		//if err != nil {
-		//	return err
-		//}
+		ns, err := cmd.Flags().GetString("namespace")
+		if err != nil {
+			return err
+		}
 
 		outPath, err := cmd.Flags().GetString("out")
 		if err != nil {
@@ -137,8 +137,8 @@ func makeRunGenTest(workingDir string, io genericclioptions.IOStreams) func(cmd 
 			return err
 		}
 
-		job := artillery.NewTestJob(testName, configMapName, filepath.Base(testScriptPath), count)
-		kustomization := artillery.NewKustomization(artillery.TestFilename, configMapName, testScriptPath, artillery.LabelPrefix)
+		job := artillery.NewTestJob(testName, ns, configMapName, filepath.Base(testScriptPath), count)
+		kustomization := artillery.NewKustomization(artillery.TestFilename, ns, configMapName, testScriptPath, artillery.LabelPrefix)
 
 		msg, err := artillery.Generatables{
 			{

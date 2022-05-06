@@ -25,7 +25,7 @@ type Job struct {
 }
 
 // NewTestJob returns a configured Kubernetes Job wrapper for an Artillery  test.
-func NewTestJob(testName, configMapName, testScriptFilename string, count int) *Job {
+func NewTestJob(testName, namespace, configMapName, testScriptFilename string, count int) *Job {
 	var (
 		parallelism  int32 = 1
 		completions  int32 = 1
@@ -45,7 +45,7 @@ func NewTestJob(testName, configMapName, testScriptFilename string, count int) *
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      testName,
-				Namespace: "default",
+				Namespace: namespace,
 				Labels:    labels(testName, "test-worker-master"),
 			},
 			Spec: v1.JobSpec{
