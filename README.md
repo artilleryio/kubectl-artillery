@@ -90,7 +90,7 @@ to functionally
 test [HTTP liveness probe endpoints](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request)
 in Pods proxied by the supplied services.
 
-Once created, update the tests to match your requirements. You can also use created test scripts to generate load tests.
+Once created, update the tests to match your requirements. You can also use created test scripts to generate tests.
 
 - [Example: scaffold test scripts](#example-scaffold-test-scripts)
 
@@ -185,7 +185,7 @@ ls -alh ./artillery-scripts
 # -rw-r--r--   1 xxx  xxx   305B  4 Apr 13:20 test-script_nginx-probes-mapped.yaml
 ````
 
-You can edit the files as you please. Then use it to generate a load test.
+You can edit the files as you please. Then use it to generate a test.
 
 ### generate
 
@@ -195,7 +195,7 @@ Use the `generate` subcommand to generate
 
 All wired in a kustomization.yaml file.
 
-- [Example: generate and apply Load Test](#example-generate-and-apply-load-test)
+- [Example: generate and apply Test](#example-generate-and-apply-test)
 
 #### Output is configurable
 
@@ -210,7 +210,7 @@ The `generate` subcommand also copies the artillery test-script file to the outp
 because [Kustomize v2.0 added a security check](https://kubectl.docs.kubernetes.io/faq/kustomize/#security-file-foo-is-not-in-or-below-bar)
 that prevents kustomizations from reading files outside their own directory root.
 
-### Example: generate and apply Load Test
+### Example: generate and apply Test
 
 ```shell
 kubectl artillery gen boom -s hack/examples/basic-loadtest/test-script.yaml
