@@ -1,11 +1,12 @@
 # Kubectl Artillery plugin
 
-Bootstrap functional testing on Kubernetes with the [Artillery](https://www.artillery.io) kubectl plugin.
+> Bootstrap [Artillery](https://www.artillery.io) testing on Kubernetes with this kubectl plugin.
 
-- Use existing Kubernetes [Services](https://kubernetes.io/docs/concepts/services-networking/service/) to scaffold 
-Artillery test scripts.
+## Use cases
 
-- Edit and use the created test scripts to functionally test your Kubernetes Services.
+- Scaffold test scripts from existing Kubernetes [Services](https://kubernetes.io/docs/concepts/services-networking/service/).
+
+- Generate testing Jobs to run on Kubernetes using existing or scaffolded test scripts.
 
 ## Installation
 
@@ -17,7 +18,7 @@ your `$PATH`.
 #### Linux
 
 ```shell
-curl -L -o kubectl-artillery.tar.gz https://github.com/artilleryio/kubectl-artillery/releases/download/v0.1.1/kubectl-artillery_0.1.1_linux_amd64_2022-04-04T15.07.18Z.tar.gz
+curl -L -o kubectl-artillery.tar.gz https://github.com/artilleryio/kubectl-artillery/releases/download/v0.2.0/kubectl-artillery_0.2.0_linux_amd64_2022-04-04T15.07.18Z.tar.gz
 tar -xvf kubectl-artillery.tar.gz
 sudo mv kubectl-artillery /usr/local/bin
 ```
@@ -25,7 +26,7 @@ sudo mv kubectl-artillery /usr/local/bin
 #### Darwin(amd64)
 
 ```shell
-curl -L -o kubectl-artillery.tar.gz https://github.com/artilleryio/kubectl-artillery/releases/download/v0.1.1/kubectl-artillery_v0.1.1_darwin_amd64_2022-04-04T15.07.18Z.tar.gz
+curl -L -o kubectl-artillery.tar.gz https://github.com/artilleryio/kubectl-artillery/releases/download/v0.2.0/kubectl-artillery_v0.2.0_darwin_amd64_2022-04-04T15.07.18Z.tar.gz
 tar -xvf kubectl-artillery.tar.gz
 sudo mv kubectl-artillery /usr/local/bin
 ```
@@ -33,7 +34,7 @@ sudo mv kubectl-artillery /usr/local/bin
 #### Darwin(arm64)
 
 ```shell
-curl -L -o kubectl-artillery.tar.gz https://github.com/artilleryio/kubectl-artillery/releases/download/v0.1.1/kubectl-artillery_v0.1.1_darwin_arm64_2022-04-04T15.07.18Z.tar.gz
+curl -L -o kubectl-artillery.tar.gz https://github.com/artilleryio/kubectl-artillery/releases/download/v0.2.0/kubectl-artillery_v0.2.0_darwin_arm64_2022-04-04T15.07.18Z.tar.gz
 tar -xvf kubectl-artillery.tar.gz
 sudo mv kubectl-artillery /usr/local/bin
 ```
@@ -52,21 +53,22 @@ $ kubectl plugin list
 Validate if `kubectl artillery` can be executed.
 
 ```bash
-kubectl artillery --help
-# Use artillery.io operator helpers
+$ kubectl artillery --help
+# Bootstrap artillery.io testing on Kubernetes
 
 # Usage:
-#  artillery [flags]
-#  artillery [command]
+#   artillery [flags]
+#   artillery [command]
 
 # Available Commands:
-#  ...
-#  generate    Generates load test manifests configured in a kustomization.yaml file
-#  ...
-#  scaffold    Scaffolds test scripts from K8s services using liveness probe HTTP endpoints
+#   ...
+#   generate    Generates a k8s Job packaged with Kustomize to execute a test
+#   ...
+#   scaffold    Scaffolds test scripts from K8s services using liveness probe HTTP endpoints
 
 # Flags:
-#  -h, --help   help for artillery
+#   -h, --help      help for artillery
+#   -v, --version   version for artillery
 
 # Use "artillery [command] --help" for more information about a command.
 ```
@@ -92,7 +94,7 @@ in Pods proxied by the supplied services.
 
 Once created, update the tests to match your requirements. You can also use created test scripts to generate tests.
 
-- [Example: scaffold test scripts](#example-scaffold-test-scripts)
+See [Example: scaffold test scripts](#example-scaffold-test-scripts).
 
 #### Output is configurable
 
@@ -101,10 +103,10 @@ where the `scaffold` subcommand was run.
 
 Use the `--out/-o` flag to specify a different directory path to write the test scripts.
 
-#### A target url for every functional test
+#### A target url for every test
 
 A Kubernetes Service may reference multiple ports, requiring multiple `target` urls. Created test scripts work around
-this by using a full urls for every functional test endpoint.
+this by using a full urls for every test endpoint.
 
 For example,
 
@@ -124,9 +126,20 @@ scenarios:
 A Pod may define a liveness probe on a port not accessible to the proxying Service. Such a liveness a probe cannot be
 tested.
 
-The plugin cannot scaffold a test script for a Service has no access to the proxied Pod's liveness probes.
+The plugin cannot scaffold a test script for a Service that has no access to the proxied Pod's liveness probes.
 
 ### Example: scaffold test scripts
+
+This example will test an Nginx server running on K8s. The related deployment will be configured with an HTTP 
+liveness probe running on port 80.
+
+All the related manifests are [found here](https://raw.githubusercontent.com/artilleryio/kubectl-artillery/main/examples/has-probes/has-probes.yaml).
+
+```shell
+$ kubectl apply -f https://raw.githubusercontent.com/artilleryio/kubectl-artillery/es-generate-rework/examples/has-probes/has-probes.yaml
+# deployment.apps/k8s-probes-mapped created
+# service/nginx-probes-mapped created
+```
 
 Let's check that our service `nginx-probes-mapped` has related Pods with defined HTTP liveness probes. A
 service's `Selector` field helps us identify the correct Pods.
@@ -150,7 +163,7 @@ kubectl get pods --selector=app=nginx-probes-mapped
 ```
 
 ```shell
-kubectl get pods k8s-probes-mapped-64998cbdf5-7cqzg -o yaml
+kubectl get pods <found-pod-object> -o yaml
 # apiVersion: v1
 # kind: Pod
 # ...
@@ -190,12 +203,12 @@ You can edit the files as you please. Then use it to generate a test.
 ### generate
 
 Use the `generate` subcommand to generate 
-- A K8s Job that will run Artillery workers.
+- A K8s Job that will run Artillery test workers.
 - Related Kubernetes manifests (e.g. ConfigMap).
 
-All wired in a kustomization.yaml file.
+All packaged with a kustomization.yaml file.
 
-- [Example: generate and apply Test](#example-generate-and-apply-test)
+See [Example: generate and apply Test](#example-generate-and-apply-test).
 
 #### Output is configurable
 
@@ -212,9 +225,11 @@ that prevents kustomizations from reading files outside their own directory root
 
 ### Example: generate and apply Test
 
+Using the test-script created by the [scaffold](#example-scaffold-test-scripts) command,
+
 ```shell
-kubectl artillery gen boom -s hack/examples/basic-loadtest/test-script.yaml
-# artillery-manifests/loadtest-cr.yaml generated
+kubectl artillery gen probe -s artillery-scripts/test-script_nginx-probes-mapped.yaml
+# artillery-manifests/test-job.yaml generated
 # artillery-manifests/kustomization.yaml generated
 ```
 
@@ -226,50 +241,91 @@ ls -alh ./artillery-manifests
 # total 24
 # drwx------   5 xxx  xxx   160B 18 Mar 15:40 .
 # drwxr-xr-x@ 34 xxx  xxx   1.1K 22 Mar 17:28 ..
-# -rw-r--r--   1 xxx  xxx   316B 23 Mar 14:11 kustomization.yaml
-# -rw-r--r--   1 xxx  xxx   177B 23 Mar 14:11 loadtest-cr.yaml
-# -rw-r--r--   1 xxx  xxx   805B 23 Mar 14:11 test-script.yaml
+# -rw-r--r--   1 xxx  xxx   369B 23 Mar 14:11 kustomization.yaml
+# -rw-r--r--   1 xxx  xxx   1.0K 23 Mar 14:11 test-job.yaml
+# -rw-r--r--   1 xxx  xxx   302B 23 Mar 14:11 test-script_nginx-probes-mapped.yaml
 ```
 
-You can edit the files as you please. And finally apply the LoadTest to an Artillery Operator enabled cluster.
+You can edit the files as you please. And finally apply the generated Job to a Kubernetes cluster.
 
 ```shell
 kubectl apply -k ./artillery-manifests
-# configmap/boom-test-script created
-# loadtest.loadtest.artillery.io/boom created
+# configmap/probe-test-script created
+# job.batch/probe created
 ```
 
-The `generate` subcommand has configured the Kustomization.yaml file with a `configMapGenerator`. When applied, it has
-generated `configmap/boom-test-script` which contains your Artillery test-script.
+The `generate` subcommand has created and configured a Kustomization.yaml file with a `configMapGenerator`. When applied, it has
+generated `configmap/probe-test-script` which loads your Artillery test-script as a volume on Kubernetes.
 
 ```shell
-kubectl describe configmap/boom-test-script
-# Name:         boom-test-script
+kubectl describe configmap/probe-test-script
+# Name:         probe-test-script
 # Namespace:    default
-# Labels:       artillery.io/component=loadtest-config
-#               artillery.io/part-of=loadtest
-# Annotations:  <none>
+# Labels:       artillery.io/component=artilleryio-test-config
+#               artillery.io/part-of=artilleryio-test
+# Annotations:  <none> | xargs command
 
 # Data
 # ====
-# test-script.yaml:
+# test-script_nginx-probes-mapped.yaml:
 # ----
-# # In Artillery, each VU will be assigned to one of the defined
 # ...
 # config:
-#   target: "http://prod-publi-bf4z9b3ymbgs-1669151092.eu-west-1.elb.amazonaws.com:8080"
-#      ...
-
+#   target: target: http://nginx-probes-mapped/
+#   environments:
+#      functional:
+#        phases:
+#          - duration: 1
+#            arrivalCount: 1
+#        plugins:
+#          expect: {}
 # scenarios:
-#   - name: "Access the / route"
-#     ...
+#   - flow:
+#      - get:
+#       ...
+#
 # BinaryData
 # ====
 # 
 # Events:  <none>
 ```
 
+Finally, you can check that test Job has run as expected.
+
+```shell
+$ kubectl get job probe -o wide
+# NAME    COMPLETIONS   DURATION   AGE     CONTAINERS   IMAGES                         SELECTOR
+# probe   1/1           25s        6m17s   probe        artilleryio/artillery:latest   controller-uid=427f9384-feab-435c-a389-20a5cf217f27
+```
+
+You can see that it ran Artillery test worker Pod to completion.
+```shell
+$ kubectl get pods
+# NAME          READY   STATUS      RESTARTS   AGE
+# probe-nf7kt   0/1     Completed   0          11m
+```
+
+The test results can be inspected by checking the logs.
+```shell
+$ kubectl logs probe-nf7kt # to see the test results
+#  Telemetry is on. Learn more: https://artillery.io/docs/resources/core/telemetry.html
+# Phase started: unnamed (index: 0, duration: 1s) 12:54:18(+0000)
+
+# Phase completed: unnamed (index: 0, duration: 1s) 12:54:19(+0000)
+
+# --------------------------------------
+# Metrics for period to: 12:54:20(+0000) (width: 0.12s)
+# --------------------------------------
+
+# http.codes.200: ................................................................ 1
+# http.request_rate: ............................................................. 1/sec
+... 
+```
+
+PS: you can also configure your test-script to publish
+results to [Prometheus](https://www.artillery.io/docs/guides/plugins/plugin-publish-metrics#prometheus-pushgateway).
+
 ## License
 
-The Artillery Operator is open-source software distributed under the terms of
+The kubectl-artillery plugin is open-source software distributed under the terms of
 the [MPLv2](https://www.mozilla.org/en-US/MPL/2.0/) license.

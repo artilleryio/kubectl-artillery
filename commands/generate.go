@@ -26,9 +26,9 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-const generatetestExample = `- $ %[1]s generate <test-name> --script path/to/test-script
-- $ %[1]s generate <test-name> -s path/to/test-script
-- $ %[1]s generate <test-name> -s path/to/test-script [--namespace] [--out ] [--count ]`
+const generatetestExample = `- $ %[1]s generate <job-name> --script path/to/test-script
+- $ %[1]s generate <job-name> -s path/to/test-script
+- $ %[1]s generate <job-name> -s path/to/test-script [--namespace] [--out ] [--count ]`
 
 // newCmdGenerate creates the "generate" test command
 func newCmdGenerate(
@@ -41,7 +41,7 @@ func newCmdGenerate(
 	cmd := &cobra.Command{
 		Use:     "generate [OPTIONS]",
 		Aliases: []string{"gen"},
-		Short:   "Generates Job manifests to run a test configured in a kustomization.yaml file",
+		Short:   "Generates a k8s Job packaged with Kustomize to execute a test",
 		Example: fmt.Sprintf(generatetestExample, cliName),
 		RunE:    makeRunGenTest(workingDir, io),
 		PostRunE: func(cmd *cobra.Command, args []string) error {
@@ -70,21 +70,21 @@ func newCmdGenerate(
 		"namespace",
 		"n",
 		"default",
-		"Optional. Specify a namespace for your services",
+		"Optional. Specify a namespace to apply your Job and related manifests",
 	)
 
 	flags.StringP(
 		"out",
 		"o",
 		"",
-		"Optional. Specify output path to write test manifests and kustomization.yaml",
+		"Optional. Specify output path to write Job and related manifests",
 	)
 
 	flags.IntP(
 		"count",
 		"c",
 		1,
-		"Optional. Specify number of test workers",
+		"Optional. Specify how many test workers the created Job should run",
 	)
 
 	if err := cmd.MarkFlagRequired("script"); err != nil {
