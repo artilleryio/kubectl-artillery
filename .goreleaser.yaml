@@ -73,7 +73,7 @@ archives:
       - LICENSE.txt
     wrap_in_directory: "true"
 gomod:
-  proxy: true
+  proxy: false
 checksum:
   name_template: 'checksums.txt'
 snapshot:
