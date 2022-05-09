@@ -18,13 +18,13 @@ import (
 	yaml3 "gopkg.in/yaml.v3"
 )
 
-// FileMarshaler defines methods to Marshal an object
+// fileMarshaler defines methods to Marshal an object
 // to a file using a specified indentation.
-type FileMarshaler interface {
+type fileMarshaler interface {
 	MarshalWithIndent(int) ([]byte, error)
 }
 
-func JsonToYaml(j []byte, spaces int) ([]byte, error) {
+func jsonToYaml(j []byte, spaces int) ([]byte, error) {
 	// Convert the JSON to an object.
 	var jsonObj interface{}
 	// We are using yaml.Unmarshal here (instead of json.Unmarshal) because the

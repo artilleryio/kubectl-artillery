@@ -27,8 +27,8 @@ hack/**/node_modules
 /hack/prom-pushgateway/kube-prometheus-main*
 
 # Ignore generated manifests.
-artillery-manifests/
-artillery-scripts/
+artillery-manifests*/
+artillery-scripts*/
 
 # editor and IDE paraphernalia
 .idea

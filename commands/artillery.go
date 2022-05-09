@@ -23,6 +23,9 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
+var Version = "v0.2.0"
+
+//cliName, the name of the CLI including kubectl as a root
 const cliName = "kubectl artillery"
 
 // NewCmdArtillery creates the kubectl-artillery CLI root command
@@ -34,8 +37,9 @@ func NewCmdArtillery(
 ) *cobra.Command {
 
 	cmd := &cobra.Command{
-		Short:        "Bootstrap functional testing on Kubernetes with Artillery",
+		Short:        "Bootstrap artillery.io testing on Kubernetes",
 		Use:          "artillery",
+		Version:      Version,
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return highlightTelemetryIfRequired(io.Out)

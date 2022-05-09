@@ -60,7 +60,7 @@ func newCmdScaffold(
 		"namespace",
 		"n",
 		"default",
-		"Optional. Specify a namespace for your services - defaults to default",
+		"Optional. Specify a namespace for your services",
 	)
 
 	flags.StringP(

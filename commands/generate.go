@@ -26,11 +26,11 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-const loadtestExample = `- $ %[1]s generate <load-test-name> --script path/to/test-script
-- $ %[1]s generate <load-test-name> -s path/to/test-script
-- $ %[1]s generate <load-test-name> -s path/to/test-script [--env ] [--out ] [--count ]`
+const generatetestExample = `- $ %[1]s generate <job-name> --script path/to/test-script
+- $ %[1]s generate <job-name> -s path/to/test-script
+- $ %[1]s generate <job-name> -s path/to/test-script [--namespace] [--out ] [--count ]`
 
-// newCmdGenerate creates the loadtest generate command
+// newCmdGenerate creates the "generate" test command
 func newCmdGenerate(
 	workingDir string,
 	io genericclioptions.IOStreams,
@@ -41,13 +41,9 @@ func newCmdGenerate(
 	cmd := &cobra.Command{
 		Use:     "generate [OPTIONS]",
 		Aliases: []string{"gen"},
-		Short:   "Generates load test Job manifests configured in a kustomization.yaml file",
-		Example: fmt.Sprintf(loadtestExample, cliName),
-		//RunE:    makeRunLoadTest(workingDir, io),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			_, _ = io.Out.Write([]byte("REDO: generate JOB to run artillery test script.\n"))
-			return nil
-		},
+		Short:   "Generates a k8s Job packaged with Kustomize to execute a test",
+		Example: fmt.Sprintf(generatetestExample, cliName),
+		RunE:    makeRunGenTest(workingDir, io),
 		PostRunE: func(cmd *cobra.Command, args []string) error {
 			testScriptPath, _ := cmd.Flags().GetString("script")
 			env, _ := cmd.Flags().GetString("env")
@@ -71,24 +67,24 @@ func newCmdGenerate(
 	)
 
 	flags.StringP(
-		"env",
-		"e",
-		"dev",
-		"Optional. Specify the load test environment - defaults to dev",
+		"namespace",
+		"n",
+		"default",
+		"Optional. Specify a namespace to apply your Job and related manifests",
 	)
 
 	flags.StringP(
 		"out",
 		"o",
 		"",
-		"Optional. Specify output path to write load test manifests and kustomization.yaml",
+		"Optional. Specify output path to write Job and related manifests",
 	)
 
 	flags.IntP(
 		"count",
 		"c",
 		1,
-		"Optional. Specify number of load test workers",
+		"Optional. Specify how many test workers the created Job should run",
 	)
 
 	if err := cmd.MarkFlagRequired("script"); err != nil {
@@ -98,10 +94,10 @@ func newCmdGenerate(
 	return cmd
 }
 
-// makeRunLoadTest creates the RunE function used to generate a load test
-func makeRunLoadTest(workingDir string, io genericclioptions.IOStreams) func(cmd *cobra.Command, args []string) error {
+// makeRunGenTest creates the RunE function used to generate a test
+func makeRunGenTest(workingDir string, io genericclioptions.IOStreams) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if err := validateLoadTest(args); err != nil {
+		if err := validateTest(args); err != nil {
 			return err
 		}
 
@@ -110,27 +106,27 @@ func makeRunLoadTest(workingDir string, io genericclioptions.IOStreams) func(cmd
 			return err
 		}
 
-		if err := validateLoadTestScriptExists(testScriptPath); err != nil {
+		if err := validateTestScriptExists(testScriptPath); err != nil {
 			return err
 		}
 
-		//env, err := cmd.Flags().GetString("env")
-		//if err != nil {
-		//	return err
-		//}
+		ns, err := cmd.Flags().GetString("namespace")
+		if err != nil {
+			return err
+		}
 
 		outPath, err := cmd.Flags().GetString("out")
 		if err != nil {
 			return err
 		}
 
-		//count, err := cmd.Flags().GetInt("count")
-		//if err != nil {
-		//	return err
-		//}
+		count, err := cmd.Flags().GetInt("count")
+		if err != nil {
+			return err
+		}
 
-		loadTestName := args[0]
-		configMapName := fmt.Sprintf("%s-test-script", loadTestName)
+		testName := args[0]
+		configMapName := fmt.Sprintf("%s-test-script", testName)
 
 		targetDir, err := artillery.MkdirAllTargetOrDefault(workingDir, outPath, artillery.DefaultManifestDir)
 		if err != nil {
@@ -141,21 +137,19 @@ func makeRunLoadTest(workingDir string, io genericclioptions.IOStreams) func(cmd
 			return err
 		}
 
-		//loadTest := v1alpha1.NewLoadTest(loadTestName, configMapName, env, count)
-		kustomization := artillery.NewKustomization(artillery.LoadTestFilename, configMapName, testScriptPath, artillery.LabelPrefix)
+		job := artillery.NewTestJob(testName, ns, configMapName, filepath.Base(testScriptPath), count)
+		kustomization := artillery.NewKustomization(artillery.TestFilename, ns, configMapName, testScriptPath, artillery.LabelPrefix)
 
-		fmt.Print(kustomization)
-		msg := ""
-		//msg, err := artillery.Generatables{
-		//	{
-		//		Path:      filepath.Join(targetDir, artillery.LoadTestFilename),
-		//		Marshaler: loadTest,
-		//	},
-		//	{
-		//		Path:      filepath.Join(targetDir, "kustomization.yaml"),
-		//		Marshaler: kustomization,
-		//	},
-		//}.Generate(2)
+		msg, err := artillery.Generatables{
+			{
+				Path:      filepath.Join(targetDir, artillery.TestFilename),
+				Marshaler: job,
+			},
+			{
+				Path:      filepath.Join(targetDir, "kustomization.yaml"),
+				Marshaler: kustomization,
+			},
+		}.Generate(2)
 		if err != nil {
 			return err
 		}
@@ -166,30 +160,30 @@ func makeRunLoadTest(workingDir string, io genericclioptions.IOStreams) func(cmd
 	}
 }
 
-// validateLoadTest validates loadtest RunE arguments.
+// validateTest validates test RunE arguments.
 // Including,
 // - Extra supplied arguments
-// - Missing loadtest name
-// - Invalid named loadtest
-func validateLoadTest(args []string) error {
+// - Missing test name
+// - Invalid named test
+func validateTest(args []string) error {
 	if len(args) == 0 {
-		return errors.New("missing load test name")
+		return errors.New("missing test name")
 	}
 	if len(args) > 1 {
 		return errors.New("unknown arguments detected")
 	}
 
-	loadTestName := args[0]
-	invalids := k8sValidation.NameIsDNSSubdomain(loadTestName, false)
+	testName := args[0]
+	invalids := k8sValidation.NameIsDNSSubdomain(testName, false)
 	if len(invalids) > 0 {
-		return fmt.Errorf("load test name %s must be a valid DNS subdomain name, \n%s", loadTestName, strings.Join(invalids, "\n- "))
+		return fmt.Errorf("test name %s must be a valid DNS subdomain name, \n%s", testName, strings.Join(invalids, "\n- "))
 	}
 
 	return nil
 }
 
-// validateLoadTestScriptExists validates the loadtest script file exists.
-func validateLoadTestScriptExists(s string) error {
+// validateTestScriptExists validates the test script file exists.
+func validateTestScriptExists(s string) error {
 	absPath, err := filepath.Abs(s)
 	if err != nil {
 		return err
