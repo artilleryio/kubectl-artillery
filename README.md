@@ -136,7 +136,7 @@ liveness probe running on port 80.
 All the related manifests are [found here](https://raw.githubusercontent.com/artilleryio/kubectl-artillery/main/examples/has-probes/has-probes.yaml).
 
 ```shell
-$ kubectl apply -f https://raw.githubusercontent.com/artilleryio/kubectl-artillery/es-generate-rework/examples/has-probes/has-probes.yaml
+$ kubectl apply -f https://raw.githubusercontent.com/artilleryio/kubectl-artillery/main/examples/has-probes/has-probes.yaml
 # deployment.apps/k8s-probes-mapped created
 # service/nginx-probes-mapped created
 ```
