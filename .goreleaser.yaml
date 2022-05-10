@@ -1,4 +1,5 @@
 # kubectl-artillery .goreleaser.yml file.
+# Used by the .github/workflows/gorelease.yaml GitHub workflow.
 # Make sure to check the documentation at https://goreleaser.com
 project_name: kubectl-artillery
 release:
