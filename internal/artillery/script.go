@@ -93,9 +93,10 @@ func NewTestScript(probes kube.ServiceProbes) *TestScript {
 		}
 	}
 
+	testScriptTarget := fmt.Sprintf("%s://%s/", probes[0].Url.Scheme, probes[0].Url.Host)
 	return &TestScript{
 		Config: Config{
-			Target: probes[0].Url.String(),
+			Target: testScriptTarget,
 
 			Environments: map[string]Environment{
 				"functional": {
