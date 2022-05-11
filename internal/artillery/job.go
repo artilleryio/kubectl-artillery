@@ -15,6 +15,7 @@ package artillery
 import (
 	"encoding/json"
 
+	"github.com/artilleryio/kubectl-artillery/internal/telemetry"
 	"k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,7 +26,7 @@ type Job struct {
 }
 
 // NewTestJob returns a configured Kubernetes Job wrapper for an Artillery  test.
-func NewTestJob(testName, namespace, configMapName, testScriptFilename string, count int) *Job {
+func NewTestJob(testName, namespace, configMapName, testScriptFilename string, count int, cfg telemetry.Config) *Job {
 	var (
 		parallelism  int32 = 1
 		completions  int32 = 1
@@ -87,6 +88,9 @@ func NewTestJob(testName, namespace, configMapName, testScriptFilename string, c
 											},
 										},
 									},
+									// These are telemetry settings passed to to the Artillery image
+									// as per an end user's environment.
+									cfg.ToK8sEnvVar()...,
 								),
 							},
 						},

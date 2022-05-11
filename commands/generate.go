@@ -43,15 +43,15 @@ func newCmdGenerate(
 		Aliases: []string{"gen"},
 		Short:   "Generates a k8s Job packaged with Kustomize to execute a test",
 		Example: fmt.Sprintf(generatetestExample, cliName),
-		RunE:    makeRunGenTest(workingDir, io),
+		RunE:    makeRunGenTest(workingDir, io, tCfg),
 		PostRunE: func(cmd *cobra.Command, args []string) error {
 			testScriptPath, _ := cmd.Flags().GetString("script")
-			env, _ := cmd.Flags().GetString("env")
+			ns, _ := cmd.Flags().GetString("namespace")
 			outPath, _ := cmd.Flags().GetString("out")
 			count, _ := cmd.Flags().GetInt("count")
 
 			logger := artillery.NewIOLogger(io.Out, io.ErrOut)
-			telemetry.TelemeterGenerateManifests(args[0], testScriptPath, env, outPath, count, tClient, tCfg, logger)
+			telemetry.TelemeterGenerateManifests(args[0], testScriptPath, ns, outPath, count, tClient, tCfg, logger)
 			return nil
 		},
 	}
@@ -95,7 +95,7 @@ func newCmdGenerate(
 }
 
 // makeRunGenTest creates the RunE function used to generate a test
-func makeRunGenTest(workingDir string, io genericclioptions.IOStreams) func(cmd *cobra.Command, args []string) error {
+func makeRunGenTest(workingDir string, io genericclioptions.IOStreams, cfg telemetry.Config) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := validateTest(args); err != nil {
 			return err
@@ -137,7 +137,7 @@ func makeRunGenTest(workingDir string, io genericclioptions.IOStreams) func(cmd 
 			return err
 		}
 
-		job := artillery.NewTestJob(testName, ns, configMapName, filepath.Base(testScriptPath), count)
+		job := artillery.NewTestJob(testName, ns, configMapName, filepath.Base(testScriptPath), count, cfg)
 		kustomization := artillery.NewKustomization(artillery.TestFilename, ns, configMapName, testScriptPath, artillery.LabelPrefix)
 
 		msg, err := artillery.Generatables{
