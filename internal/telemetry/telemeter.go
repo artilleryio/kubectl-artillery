@@ -50,7 +50,7 @@ func TelemeterServicesScaffold(
 
 // TelemeterGenerateManifests enqueues a kubectl-artillery generate command event.
 func TelemeterGenerateManifests(
-	name, testScriptPath, env, outPath string,
+	name, testScriptPath, namespace, outPath string,
 	count int,
 	tClient posthog.Client,
 	tConfig Config,
@@ -66,7 +66,7 @@ func TelemeterGenerateManifests(
 				"name":             hashEncode(name),
 				"testScript":       hashEncode(testScriptPath),
 				"count":            count,
-				"environment":      hashEncode(env),
+				"namespace":        hashEncode(namespace),
 				"defaultOutputDir": len(outPath) == 0,
 			},
 		},

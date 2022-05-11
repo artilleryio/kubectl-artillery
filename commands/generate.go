@@ -46,12 +46,12 @@ func newCmdGenerate(
 		RunE:    makeRunGenTest(workingDir, io),
 		PostRunE: func(cmd *cobra.Command, args []string) error {
 			testScriptPath, _ := cmd.Flags().GetString("script")
-			env, _ := cmd.Flags().GetString("env")
+			ns, _ := cmd.Flags().GetString("namespace")
 			outPath, _ := cmd.Flags().GetString("out")
 			count, _ := cmd.Flags().GetInt("count")
 
 			logger := artillery.NewIOLogger(io.Out, io.ErrOut)
-			telemetry.TelemeterGenerateManifests(args[0], testScriptPath, env, outPath, count, tClient, tCfg, logger)
+			telemetry.TelemeterGenerateManifests(args[0], testScriptPath, ns, outPath, count, tClient, tCfg, logger)
 			return nil
 		},
 	}
